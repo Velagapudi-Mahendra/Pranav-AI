@@ -12,6 +12,31 @@ Our goal is to build an AI-powered platform that helps people by [📌 add your 
 We aim to combine **Artificial Intelligence**, **Data Science**, and **Modern Web Tech** to create a scalable, impactful solution.  
 
 ---
+# Pranav-AI  
+
+🚀 **Pranav-AI** is an innovative AI-driven project being developed for the **Imagine Cup**.  
+Our vision is to create an intelligent assistant that combines **natural language processing**, **machine learning**, and **real-world applications** to solve practical problems.  
+
+---
+
+## 🌟 Project Vision  
+Pranav-AI aims to:  
+- Build an AI assistant that can understand and respond intelligently.  
+- Integrate AI with user-friendly interfaces for accessibility.  
+- Provide scalable solutions using modern technologies.  
+- Compete at a global level in the Imagine Cup.  
+
+---
+
+## 🛠️ Tech Stack  
+- **Programming Language**: Python  
+- **Frameworks/Libraries**:  
+  - TensorFlow / PyTorch (for AI/ML)  
+  - Hugging Face Transformers (for NLP)  
+  - Flask/FastAPI (for backend APIs)  
+- **Frontend (Optional)**: React.js or simple web UI  
+- **Database**: MongoDB / PostgreSQL  
+- **Tools**: VS Code, GitHub, Jupyter Notebook  
 
 ## ⚙️ Setup Instructions
 
@@ -25,9 +50,6 @@ We aim to combine **Artificial Intelligence**, **Data Science**, and **Modern We
 ```bash
 git clone https://github.com/Velagapudi-Mahendra/Pranav-AI.git
 cd Pranav-AI
-
-
-
 
 ---
 
