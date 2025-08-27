@@ -1,300 +1,159 @@
-1) One-line elevator pitch
+# BioScan – AI Disease Prediction from Cough & Voice 🩺
+
+## 1) One-line Elevator Pitch
 
 BioScan — a phone-based AI that analyzes a 20–30s voice + cough recording to screen for respiratory illness and risk signals (e.g., likely respiratory infection, abnormal breathing patterns, or flagged for clinical follow-up), delivering an instant, explainable risk score and actionable next steps.
 
-2) Why this wins
+## 2) Why this Wins
 
-High impact & scale: low-cost screening tool for low-resource settings.
+* High impact & scale: low-cost screening tool for low-resource settings.
+* Technical novelty: deep models on audio spectrograms + explainability + multi-modal features (voice + cough + short questionnaire).
+* Feasible prototype: can demonstrate with only a laptop + smartphone mic + public datasets + Azure free credits.
+* Good fit for Microsoft stack: Azure ML, Cognitive Services, OpenAI for explanations, Power BI for dashboards.
 
-Technical novelty: deep models on audio spectrograms + explainability + multi-modal features (voice + cough + short questionnaire).
+## 3) Recommended Public Datasets
 
-Feasible prototype: you can demonstrate with only a laptop + smartphone mic + public datasets + Azure free credits.
+* **COUGHVID** — large crowdsourced cough dataset (25k–30k+ recordings). Great for cough classification / healthy vs symptomatic signals.
 
-Good fit for Microsoft stack: Azure ML, Cognitive Services, OpenAI for explanations, Power BI for dashboards.
+  * Sources: Nature, EPFL
+* **Coswara** — respiratory (breathing, cough, voice) dataset with rich metadata (COVID status, symptoms). Useful for breath + voice tasks.
 
-3) Recommended public datasets (start here)
+  * Sources: Nature, GitHub
+* **Additional datasets**: Virufy, Cambridge, ESC-50 (for background sounds augmentation).
 
-Use multiple public cough/voice datasets to train and validate — combine them to improve generalization:
+  * Sources: ScienceDirect, PMC
+* *(Cite datasets in README and follow license/consent rules.)*
 
-COUGHVID — large crowdsourced cough dataset (25k–30k+ recordings). Great for cough classification / healthy vs symptomatic signals. 
-Nature
-EPFL
+## 4) System Architecture (High Level)
 
-Coswara — respiratory (breathing, cough, voice) dataset with rich metadata (COVID status, symptoms). Useful for breath + voice tasks. 
-Nature
-GitHub
+1. **Client (Mobile Web / PWA or Streamlit demo)**
 
-Additional datasets & references used in literature: Virufy, Cambridge, ESC-50 (for background sounds augmentation). See comparative studies for dataset combinations. 
-ScienceDirect
-PMC
+   * Records \~30s: coughs (2–3 voluntary), 5–10s breathing, short phrases.
+   * Collects minimal metadata (age, symptoms, consent).
+   * Sends audio + metadata to backend or runs on-device.
 
-(You’ll cite dataset sources in your README and follow their license/consent rules.)
+2. **Preprocessing Service**
 
-4) System architecture (high level)
+   * Audio normalization, denoising, silence trimming.
+   * Feature extraction: Mel-spectrogram, MFCCs, chroma, spectral contrast, pitch/stats.
 
-Client (Mobile Web / PWA or Streamlit demo)
+3. **Inference (Model Serving)**
 
-Records ~30s: coughs (2–3 voluntary coughs), 5–10s breathing, short phrases (counting).
+   * Primary model: CNN or CNN+LSTM on spectrograms for cough classification.
+   * Ensembles: Separate model for breathing, one for voice; fuse for final risk score.
+   * Explainability: Grad-CAM + Azure OpenAI textual explanation.
 
-Collects minimal metadata (age bracket, symptoms checkbox, consent).
+4. **Decision Module**
 
-Sends audio + metadata to backend (or runs on-device for inference if model small).
+   * Produces: risk score (0–100), label (low/medium/high), contributing features, recommended actions.
 
-Preprocessing Service
+5. **Dashboard & Analytics**
 
-Audio normalization, denoising (spectral gating), silence trimming.
+   * Power BI / Streamlit: pipeline visualization, sample inferences, anonymized metrics.
 
-Extract features: Mel-spectrogram, MFCCs, chroma, spectral contrast; augment with pitch/stats.
+6. **Storage & Orchestration**
 
-Inference (Model Serving)
+   * Azure Blob Storage (encrypted), Azure ML (training + model registry), Azure Functions or App Service for APIs.
 
-Primary model: Convolutional neural network (CNN) or CNN+LSTM on spectrograms for cough classification.
+## 5) Detailed Tech Stack (Microsoft-friendly, cheap/free)
 
-Ensembles: Add a separate model for breathing, one for voice (prosody/stress). Combine via small fusion network for final risk score.
+* **Frontend/Demo:** Streamlit, React PWA, or Flask.
+* **Audio Processing:** Python (librosa, torchaudio).
+* **Modeling:** PyTorch or TensorFlow.
+* **Serving:** Azure ML endpoints or Azure Functions + ONNX.
+* **Explainability & Text:** Azure OpenAI Service / GPT-4o.
+* **Monitoring / Analytics:** Power BI free tier or Streamlit dashboards.
+* **Storage:** Azure Blob (student credits) or local.
+* **CI/CD & Repo:** GitHub + Actions.
+* **Authentication & Consent:** OAuth or one-time checkbox.
 
-Explainability: Grad-CAM on spectrograms + feature importance; short textual explanation using Azure OpenAI.
+## 6) Model & Training Plan
 
-Decision Module
+**A. Preprocessing:** Resample 16kHz, mono; bandpass 50–4000 Hz; Mel-spectrogram; augment (time shift, pitch, noise, SpecAugment).
 
-Produces: risk score (0–100), label (e.g., low/medium/high), top contributing features, recommended actions (test nearby, see doctor, self-isolate).
+**B. Model Architecture:**
 
-Dashboard & Analytics
+* Starter: ResNet18 on mel-spec images.
+* Advanced: 2-branch CNN + transformer/CNN for cough + breathing/voice; fuse vectors; classifier for risk score.
 
-Power BI / Streamlit app for judges showing: model pipeline, sample inferences, aggregated anonymized metrics.
+**C. Loss & Outputs:** Classification loss (cross-entropy), regression loss (MSE for severity).
 
-Storage & Orchestration
+**D. Evaluation Metrics:** ROC-AUC, Precision/Recall, F1, confusion matrix, calibration (Brier score).
 
-Azure Blob Storage for audio (encrypted), Azure ML for training & model registry, Azure Functions or App Service for serving APIs.
+**E. Cross-Validation:** Subject-level split, k-fold stratified.
 
-5) Detailed tech stack (Microsoft-friendly, cheap/free)
+**F. Explainability:** Grad-CAM + textual explanation.
 
-Frontend / Demo: Streamlit (quick), React PWA, or Flask.
+## 7) Minimal Viable Demo
 
-Audio processing: Python (librosa, torchaudio).
+* 3–4 min video: problem + story, live demo (cough → risk + explanation), training metrics, scalability plan.
+* Live web demo (Streamlit) for judges.
 
-Modeling: PyTorch or TensorFlow. Train on local GPU or Azure ML compute (use student/free credits).
+## 8) Minimal 12-week Build Timeline
 
-Serving: Azure ML endpoints or Azure Functions + ONNX for light inference.
+* **Week 1:** Research & data prep, prototype recording UI, baseline preprocessing.
+* **Weeks 2–3:** Baseline model training (ResNet), augmentation, CV.
+* **Week 4:** Breathing/voice branch, ensemble, Grad-CAM.
+* **Week 5:** Streamlit demo, API integration.
+* **Week 6:** Metrics & validation.
+* **Week 7:** OpenAI explanations.
+* **Week 8:** Dashboard & pitch.
+* **Week 9:** Pilot recordings, user testing.
+* **Week 10:** Polish demo video & slides.
+* **Week 11:** Rehearse Q\&A.
+* **Week 12:** Final polish & submission.
 
-Explainability & text: Azure OpenAI Service / GPT-4o to convert model signals to human-friendly explanations (use carefully, note policies).
+## 9) Team Roles
 
-Monitoring / Analytics: Power BI (free tier) or Streamlit dashboards.
+* Lead Dev/ML: pipeline, modeling, training.
+* Frontend/Demo creator: Streamlit + video.
+* Domain Advisor: validate clinical claims.
+* Optional: Data engineer.
 
-Storage: Azure Blob (free student credits), local for prototyping.
+## 10) Cost & Azure Student Perks
 
-CI/CD & Repo: GitHub + Actions (free for public student repos).
+* Compute: local laptop / free Colab GPU / Azure ML free credits.
+* Storage: Azure Blob free tier.
+* Out-of-pocket: ₹0 – ₹5,000 (mostly free).
 
-Authentication & Consent: Simple OAuth or one-time consent checkbox; store no PII.
+## 11) Data Privacy & Ethics
 
-6) Model & training plan (practical, reproducible)
+* Obtain consent, anonymize metadata.
+* Screening aid, not a diagnosis.
+* Ethics slide for bias mitigation, privacy, regulatory pathway.
 
-A. Preprocessing
+## 12) Submission Materials
 
-Resample to 16 kHz, mono.
+* Working demo link, 3–4 min video, pitch deck (10 slides), GitHub repo, dataset & model datasheet.
 
-Apply bandpass 50–4000 Hz.
+## 13) Demo Video Script (3–4 min)
 
-Compute 2D Mel-spectrograms (e.g., 128 mel bins), log scale.
+* 0:00–0:20: Hook story
+* 0:20–0:50: Problem stats + solution overview
+* 0:50–1:50: Live demo (cough + breath → risk + Grad-CAM)
+* 1:50–2:30: Model performance (ROC, dataset counts)
+* 2:30–3:10: Business & deployment plan
+* 3:10–3:40: Team & ask
+* 3:40–4:00: Call to action & gratitude
 
-Data augmentation: time shift, pitch shift, additive noise, SpecAugment.
+## 14) Likely Judge Questions
 
-B. Model architecture (starter → advanced)
+* Accuracy: share ROC-AUC, emphasize sensitivity.
+* False reassurance: calibrate thresholds + disclaimers.
+* Microphone/environment variation: noise augmentation, domain randomization.
+* Regulatory path: screening tool, plan clinical validation / FDA/CE.
 
-Starter: ResNet18 (pretrained) on mel-spectrogram images (transfer learning).
+## 15) Quick Starter Checklist (Today)
 
-Advanced: 2-branch network — CNN on cough spectrogram + transformer/CNN on breathing/voice features; fuse latent vectors, then small classifier/regressor for risk score.
+* Clone/open repo.
+* Download COUGHVID + Coswara subsets.
+* Streamlit UI for record/upload audio.
+* Preprocessing pipeline (librosa).
+* Train quick ResNet baseline.
+* Make one demo inference + record video.
 
-C. Loss & outputs
+## 16) Useful References
 
-Classification loss (cross-entropy) for disease class / symptomatic vs healthy.
-
-Regression loss (MSE) for severity score if dataset has severity labels.
-
-Calibrate probabilities (Platt scaling).
-
-D. Evaluation metrics
-
-ROC-AUC, Precision/Recall (esp. recall/sensitivity), F1, confusion matrix, and calibration (Brier score).
-
-Clinically important: maximize sensitivity at acceptable specificity (minimize false negatives).
-
-E. Cross-validation
-
-Subject-level split (avoid same person in train & test). Use k-fold stratified by label and demographics.
-
-F. Explainability
-
-Grad-CAM overlays on spectrograms to highlight regions that influenced decision; convert to textual explanation (e.g., “high spectral energy at 800–1200 Hz during cough segment”).
-
-7) Minimal viable demo (what judges want to see)
-
-A short demo video (3–4 min):
-
-Problem statement + personal story (20–30s).
-
-Live demo: record cough → model returns “High risk: recommend testing” + explanation (60–90s).
-
-Quick peek at training & performance metrics (ROC curve, dataset counts) (30s).
-
-Scalability & impact plan (30–60s).
-
-Live web demo URL (Streamlit) where judges can record or upload audio and get results.
-
-8) Minimal 12-week build timeline (you can compress; this is aggressive but doable)
-
-Week 1 — Research & data prep
-
-Collect COUGHVID + Coswara subsets; read licenses.
-
-Prototype recording UI (Streamlit).
-
-Baseline preprocessing scripts.
-
-Week 2–3 — Baseline model
-
-Train baseline ResNet on mel-specs. Evaluate.
-
-Implement augmentation, subject-split CV.
-
-Week 4 — Improve & ensemble
-
-Add breathing/voice branch; fuse models.
-
-Implement explainability (Grad-CAM).
-
-Week 5 — UI & demo
-
-Build Streamlit demo, integrate API endpoint.
-
-Add consent/metadata collection.
-
-Week 6 — Metrics & validation
-
-Generate ROC, confusion matrices, perform ablation studies.
-
-Calibrate model probabilities.
-
-Week 7 — Explainability + OpenAI explanations
-
-Hook model signals to short GPT-4o prompts to produce layman explanations for outputs.
-
-Week 8 — Dashboard & pitch
-
-Make Power BI dashboard showing performance & ethical safeguards.
-
-Draft pitch deck (10–12 slides).
-
-Week 9 — Pilot recordings & user testing
-
-Collect 50–200 test recordings from friends (consent). Evaluate on real audio.
-
-Week 10 — Polish demo video & slides
-
-Produce 3–4 minute demo video.
-
-Week 11 — Rehearse Q&A
-
-Prepare answers for likely judge questions (bias, false positives, clinical deployment).
-
-Week 12 — Final polish & submission
-
-9) Team roles (small & lean)
-
-You (Lead dev/ML) — pipeline, modeling, training.
-
-Frontend dev / Demo creator — Streamlit + video.
-
-Domain advisor (medicine/public health) — validate clinical claims (can be a mentor).
-
-(Optional) Data engineer — dataset curation & augmentation.
-
-You can do this as a team of 2–3 to be efficient.
-
-10) Cost & Azure student perks (keep it near-free)
-
-Compute: Train locally on a decent laptop / free Colab GPU (or Azure ML free credits).
-
-Azure: Student credits and free tiers can cover hosting + OpenAI trial credits. (Sign up early).
-
-Storage: Tiny — audio files are small. Use Azure Blob free with credits.
-Estimated out-of-pocket: ₹0 – ₹5,000 (domain/hosting optional). Mostly free.
-
-11) Data privacy & ethics (must cover in judges Qs)
-
-Obtain explicit consent for any recordings in demos.
-
-Anonymize metadata; store only what’s required.
-
-Emphasize tool is a screening aid, not a diagnosis. Recommend confirmatory clinical tests.
-
-Prepare a short ethics slide describing bias mitigation (balanced datasets, subject-split CV), privacy (encryption), and regulatory pathway (clinical trials, approvals).
-
-12) Submission materials you must prepare
-
-Working demo link (Streamlit or PWA) — judges will try it.
-
-3–4 minute demo video (clear story + live demo).
-
-Pitch deck (10 slides) — problem, solution, tech, impact, business model, timeline, team, ask.
-
-Code repo (GitHub) — README, instructions to run.
-
-Datasheet: dataset sources, preprocessing steps, model card & limitations (ethical).
-
-13) Demo video script (quick 3-4 min)
-
-0:00–0:20 — Hook: quick story (“My uncle waited too long...”)
-
-0:20–0:50 — Problem stats & solution overview (BioScan)
-
-0:50–1:50 — Live demo: record cough + breath, show risk + explanation; show Grad-CAM spectrogram.
-
-1:50–2:30 — Model performance highlights (ROC AUC, sensitivity) with dataset counts & sources. (Cite COUGHVID / Coswara.) 
-Nature
-+1
-
-2:30–3:10 — Business & deployment: free app for screening; partnerships with clinics; scaling plan.
-
-3:10–3:40 — Team & ask: mentorship, Azure credits, pilot partners.
-
-3:40–4:00 — Call to action & gratitude.
-
-14) Likely Judge Questions & short answers (prep)
-
-Q: How accurate is it? A: Share ROC-AUC and emphasize high sensitivity; state dataset & CV method.
-
-Q: Could it cause false reassurance? A: We calibrate thresholds to prioritize sensitivity and provide clear disclaimers + next steps.
-
-Q: Have you tested on different microphones/environments? A: Use noise augmentation and domain randomization; show results from pilot.
-
-Q: Regulatory path? A: It’s a screening tool; plan clinical validation and FDA/CE if moving to medical device.
-
-15) Quick starter checklist (today)
-
-Clone/open a project repo.
-
-Download COUGHVID and Coswara subsets. 
-Kaggle
-GitHub
-
-Create Streamlit UI to record/upload audio.
-
-Write preprocessing pipeline (librosa).
-
-Train a quick ResNet baseline on mel-specs.
-
-Make one demo inference and record video.
-
-16) Useful references (datasets & papers)
-
-COUGHVID dataset (EPFL / Nature paper). 
-Nature
-EPFL
-
-Coswara dataset (IISc paper / GitHub). 
-Nature
-GitHub
-
-Survey papers on cough audio detection & ML methods. 
-PMC
-ScienceDirect
+* COUGHVID (EPFL / Nature)
+* Coswara (IISc / GitHub)
+* Survey papers on cough audio detection & ML methods (PMC / ScienceDirect)
